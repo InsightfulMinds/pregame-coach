@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Pregame Coach Demo</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17211b;
+      --muted: #5c685f;
+      --line: #d9dfd8;
+      --field: #f7f8f5;
+      --green: #1d7f4f;
+      --gold: #c97d18;
+      --gold-light: #d9a850;
+      --red: #b13a2f;
+      --paper: #fffdf7;
+      --shadow: 0 18px 50px rgba(23, 33, 27, 0.12);
+      --shadow-sm: 0 4px 12px rgba(23, 33, 27, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #f2f6ef 0%, #fffdf7 48%, #eef5f8 100%);
+      color: var(--ink);
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.015) 2px, rgba(0, 0, 0, 0.015) 4px),
+        repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0, 0, 0, 0.015) 2px, rgba(0, 0, 0, 0.015) 4px);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    body > * {
+      position: relative;
+      z-index: 2;
+    }
+
+    header.topbar-fixed {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 253, 247, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(217, 223, 216, 0.5);
+      z-index: 100;
+      padding: 16px 24px;
+    }
+
+    main {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 120px 0 40px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: 0;
+      font-size: 1.05rem;
+    }
+
+    .mark {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: var(--ink);
+      color: white;
+      font-weight: 900;
+      font-size: 0.85rem;
+    }
+
+    a {
+      color: var(--green);
+      font-weight: 700;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    a:hover {
+      color: var(--gold);
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1.4fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 253, 247, 0.9);
+      box-shadow: var(--shadow);
+    }
+
+    .form-panel {
+      position: sticky;
+      top: 100px;
+      padding: 22px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2.1rem, 5vw, 4.8rem);
+      line-height: 0.96;
+      letter-spacing: 0;
+      max-width: 760px;
+    }
+
+    h2 {
+      margin: 0 0 18px;
+      font-size: 1.25rem;
+      letter-spacing: 0;
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .lede {
+      max-width: 760px;
+      font-size: 1.08rem;
+      margin: 0 0 26px;
+    }
+
+    label {
+      display: block;
+      margin: 16px 0 7px;
+      color: #334039;
+      font-size: 0.88rem;
+      font-weight: 800;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--field);
+      color: var(--ink);
+      padding: 11px 12px;
+      font: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    input:hover,
+    select:hover {
+      border-color: #c4c0b4;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(196, 154, 60, 0.12), inset 0 0 0 1px rgba(196, 154, 60, 0.1);
+    }
+
+    button {
+      width: 100%;
+      min-height: 48px;
+      margin-top: 20px;
+      border: 0;
+      border-radius: 7px;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+      color: #1a1a1a;
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 16px rgba(201, 125, 24, 0.2);
+      font-size: 1rem;
+      letter-spacing: 0.3px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(201, 125, 24, 0.3);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.loading {
+      background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { background-position: 200% 0; }
+      50% { background-position: 0 0; }
+    }
+
+    .routine {
+      display: grid;
+      gap: 14px;
+    }
+
+    .placeholder,
+    .step {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 253, 247, 0.96);
+    }
+
+    .placeholder {
+      min-height: 220px;
+      display: grid;
+      align-content: center;
+      text-align: center;
+      animation: fadeIn 0.4s ease 0.2s both;
+    }
+
+    .placeholder h2 {
+      color: #334039;
+    }
+
+    .step {
+      animation: slideUp 0.5s cubic-bezier(0.23, 1, 0.320, 1) both;
+      transition: all 0.3s ease;
+    }
+
+    .step:hover {
+      box-shadow: var(--shadow-sm);
+      border-color: rgba(196, 154, 60, 0.3);
+    }
+
+    .step:nth-child(1) { animation-delay: 0.1s; }
+    .step:nth-child(2) { animation-delay: 0.2s; }
+    .step:nth-child(3) { animation-delay: 0.3s; }
+    .step:nth-child(4) { animation-delay: 0.4s; }
+    .step:nth-child(5) { animation-delay: 0.5s; }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      min-height: 200px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(201, 125, 24, 0.2);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .loading-text {
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .step-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .step h3 {
+      margin: 0;
+      font-size: 1.02rem;
+      letter-spacing: 0;
+      color: #1a1a1a;
+    }
+
+    .tag {
+      flex: 0 0 auto;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 9px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: rgba(255, 253, 247, 0.5);
+    }
+
+    .callout {
+      margin: 12px 0 0;
+      border-left: 4px solid var(--gold);
+      padding: 10px 12px;
+      background: rgba(196, 154, 60, 0.08);
+      color: #334039;
+      font-weight: 700;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .objections {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .objection {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 12px;
+      background: var(--field);
+      transition: all 0.2s ease;
+    }
+
+    .objection:hover {
+      border-color: rgba(196, 154, 60, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .objection strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--red);
+    }
+
+    .objection span {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.42;
+    }
+
+    .objection p {
+      margin: 0;
+      color: var(--ink);
+      font-size: 0.92rem;
+    }
+
+    .small {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .coach-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(196, 154, 60, 0.2);
+    }
+
+    .coach-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+      display: grid;
+      place-items: center;
+      color: #1a1a1a;
+      font-weight: 900;
+      font-size: 0.8rem;
+    }
+
+    .coach-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .coach-name {
+      font-weight: 800;
+      color: #1a1a1a;
+      font-size: 0.9rem;
+    }
+
+    .coach-title {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-weight: 700;
+    }
+
+    @media (max-width: 820px) {
+      main {
+        width: min(100% - 24px, 680px);
+        padding: 120px 16px 40px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      header.topbar-fixed {
+        padding: 12px 16px;
+      }
+
+      .shell,
+      .objections {
+        grid-template-columns: 1fr;
+      }
+
+      .form-panel {
+        position: static;
+      }
+
+      .objections {
+        grid-template-columns: 1fr;
+      }
+
+      label {
+        margin: 14px 0 6px;
+      }
+
+      input,
+      select {
+        min-height: 44px;
+        font-size: 16px;
+      }
+
+      button {
+        min-height: 46px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      main {
+        padding: 100px 12px 32px;
+      }
+
+      h1 {
+        font-size: clamp(1.5rem, 4vw, 2.5rem);
+      }
+
+      .lede {
+        font-size: 1rem;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+      }
+
+      .step-head {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .tag {
+        margin-top: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar-fixed">
+    <div class="brand" style="width: 100%; max-width: 1120px; margin: 0 auto; display: flex; align-items: center; gap: 12px;">
+      <span class="mark">PG</span>
+      <span>The Pregame Coach</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="topbar">
+      <div style="flex: 1;"></div>
+      <a href="../landing/index.html">Landing</a>
+    </div>
+
+    <h1>Warm up before the call.</h1>
+    <p class="lede">Get a simple five-step warmup: what to remember, what they might say, and the first line you can actually say out loud.</p>
+
+    <div class="shell">
+      <section class="panel form-panel" aria-label="Pregame inputs">
+        <h2>Call Setup</h2>
+        <form id="pregame-form">
+          <label for="industry">Your industry</label>
+          <input id="industry" name="industry" list="industries" value="SaaS" autocomplete="off">
+          <datalist id="industries">
+            <option value="Insurance"></option>
+            <option value="Real estate"></option>
+            <option value="SaaS"></option>
+            <option value="Coaching"></option>
+            <option value="Recruiting"></option>
+            <option value="General B2B"></option>
+          </datalist>
+
+          <label for="offer">Your product/service</label>
+          <input id="offer" name="offer" value="workflow automation software" autocomplete="off">
+
+          <label for="prospect">Prospect type</label>
+          <select id="prospect" name="prospect">
+            <option value="cold">Cold</option>
+            <option value="warm">Warm</option>
+            <option value="referral">Referral</option>
+          </select>
+
+          <button type="submit">Build Warmup</button>
+        </form>
+        <p class="small">Coach Rally keeps the routine short enough to read before the next dial.</p>
+      </section>
+
+      <section class="routine" id="routine" aria-live="polite">
+        <div class="placeholder panel">
+          <h2>Ready when you are.</h2>
+          <p>Enter the call context and load a routine built from the coach protocol and objection playbook.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const objectionSets = {
+      insurance: [
+        {
+          text: "I already have coverage.",
+          meaning: "They believe having a policy means the problem is solved.",
+          rebuttal: "Good. Then this is not about starting over. It is about checking whether what you have still matches your life today."
+        },
+        {
+          text: "I do not want to switch agents.",
+          meaning: "Trust and loyalty are protecting the current relationship.",
+          rebuttal: "I respect that. Keep a good agent if they are serving you well. My question is whether there is anything you have not been able to get answered clearly."
+        },
+        {
+          text: "Insurance is confusing.",
+          meaning: "They fear making the wrong choice.",
+          rebuttal: "Exactly why I do not lead with plan names. First we identify what you need protected, then compare only the options that match that."
+        }
+      ],
+      "real estate": [
+        {
+          text: "The market is bad.",
+          meaning: "Uncertainty is becoming a reason to avoid deciding.",
+          rebuttal: "The market is not a reason by itself. It changes the strategy. Are you trying to avoid a bad move, or avoid deciding?"
+        },
+        {
+          text: "We are just browsing.",
+          meaning: "They want control and no pressure.",
+          rebuttal: "That is fine. Browsing gets useful when we define what would make something worth acting on. What would have to be true?"
+        },
+        {
+          text: "We want to wait for rates to drop.",
+          meaning: "They are anchoring the whole decision to one variable.",
+          rebuttal: "Rates matter. So do buyer demand, price, and your timeline. If rates drop and everyone jumps back in, what changes for you?"
+        }
+      ],
+      saas: [
+        {
+          text: "We already have a tool.",
+          meaning: "They are protecting the status quo and avoiding migration pain.",
+          rebuttal: "Good. Then we do not need to debate tools in general. Where does the current setup still slow the team down?"
+        },
+        {
+          text: "Nobody used the last software.",
+          meaning: "Adoption risk is larger than feature interest.",
+          rebuttal: "That is the right concern. Software only matters if behavior changes. What made the last one hard to use?"
+        },
+        {
+          text: "Timing is bad.",
+          meaning: "The pain is not urgent enough yet.",
+          rebuttal: "That may be true. What would have to happen for this to become a priority, and is any of that already starting?"
+        }
+      ],
+      coaching: [
+        {
+          text: "I do not believe coaching works.",
+          meaning: "They have seen vague advice packaged as transformation.",
+          rebuttal: "You should be skeptical. Good coaching should change decisions, behavior, and outcomes. What would prove it worked for you?"
+        },
+        {
+          text: "It is too expensive.",
+          meaning: "The outcome is not concrete enough yet.",
+          rebuttal: "Agreed, if it only feels like a cost. What would need to change for this to be obviously worth it?"
+        },
+        {
+          text: "I need to think about it.",
+          meaning: "The real concern is unnamed.",
+          rebuttal: "Of course. Before you think on it, what is the part that is not clear yet: value, timing, trust, or price?"
+        }
+      ],
+      recruiting: [
+        {
+          text: "We are not hiring right now.",
+          meaning: "They see recruiting as only useful after the pain is urgent.",
+          rebuttal: "Understood. The best recruiting conversations often happen before panic. Which role would hurt most if someone left?"
+        },
+        {
+          text: "We have internal recruiters.",
+          meaning: "They are protecting internal ownership and budget.",
+          rebuttal: "Good. I am not here to replace them. Where do they need extra reach: hard-to-find profiles, speed, or confidential searches?"
+        },
+        {
+          text: "Your fee is too high.",
+          meaning: "They are comparing fee to expense, not vacancy cost.",
+          rebuttal: "It is high if the role is easy to fill. What does the vacancy cost per month when the seat stays open?"
+        }
+      ],
+      general: [
+        {
+          text: "I'm not interested.",
+          meaning: "They are protecting attention before they understand relevance.",
+          rebuttal: "Fair. Most people are not interested before they know why I called. Give me 20 seconds, and if it is irrelevant I'll get out of your way."
+        },
+        {
+          text: "Send me information.",
+          meaning: "They want a polite exit without conflict.",
+          rebuttal: "I can send it, but I do not want to dump generic info on you. What should I tailor it around: cost, results, timing, or fit?"
+        },
+        {
+          text: "It's too expensive.",
+          meaning: "They do not see enough value or are afraid of being wrong.",
+          rebuttal: "That is fair if it only feels like a cost. The question is whether the problem is already costing more than the fix."
+        }
+      ]
+    };
+
+    const prospectReads = {
+      cold: "Interrupted, skeptical, and looking for a reason to exit. Earn the next 20 seconds by being clear fast.",
+      warm: "Curious, but not yet convinced the problem is urgent. Do not re-pitch. Pressure-test priority.",
+      referral: "More open because trust was borrowed, but still protecting time. Honor the referral and qualify cleanly."
+    };
+
+    const anchors = {
+      cold: "I am not owed attention. I earn it with relevance.",
+      warm: "A no with the truth is better than a maybe with fog.",
+      referral: "I protect the referral by being useful, clear, and easy to decline."
+    };
+
+    const form = document.querySelector("#pregame-form");
+    const routine = document.querySelector("#routine");
+    const button = form.querySelector("button");
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const industryRaw = form.industry.value.trim() || "General B2B";
+      const offerRaw = form.offer.value.trim() || "your offer";
+      const prospect = form.prospect.value;
+
+      button.classList.add("loading");
+      button.disabled = true;
+
+      routine.innerHTML = `
+        <div class="loading-container">
+          <div class="spinner"></div>
+          <div class="loading-text">Building your warmup routine</div>
+        </div>
+      `;
+
+      setTimeout(() => {
+        const key = mapIndustry(industryRaw);
+        const objections = objectionSets[key] || objectionSets.general;
+        const industryLabel = industryRaw.replace(/\s+/g, " ");
+        const offer = offerRaw.replace(/\s+/g, " ");
+        const opening = buildOpening(prospect, industryLabel, offer);
+
+        routine.innerHTML = `
+          ${step("1", "Mindset Calibration", "Call Frame", `
+            <p>I am calling a <strong>${escapeHtml(prospect)}</strong> prospect in <strong>${escapeHtml(industryLabel)}</strong> about <strong>${escapeHtml(offer)}</strong> to create one clean next step.</p>
+            <div class="callout">You do not have to force a yes. Your job is to make the next step clearer.</div>
+          `)}
+          ${step("2", "Prospect Read", "Game Tape", `
+            <p>${escapeHtml(prospectReads[prospect])}</p>
+            <div class="callout">${escapeHtml(anchors[prospect])}</div>
+          `)}
+          ${step("3", "Objection Preview", "Top 3", `
+            <div class="objections">
+              ${objections.map((item) => `
+                <article class="objection">
+                  <strong>${escapeHtml(item.text)}</strong>
+                  <span>${escapeHtml(item.meaning)}</span>
+                  <p>${escapeHtml(item.rebuttal)}</p>
+                </article>
+              `).join("")}
+            </div>
+          `)}
+          ${step("4", "Opening Line Prep", "Say This", `
+            <p>${escapeHtml(opening)}</p>
+            <div class="callout">Read it once. If it sounds stiff, shorten it until it sounds like you.</div>
+          `)}
+          ${step("5", "Energy Check", "Dial", `
+            <p>Score your energy from 1 to 10. Under 6: stand up, one slow breath, read the opening line once. Over 8: slow your pace so you do not outrun the prospect.</p>
+            <div class="callout">You have enough to start. Make the first sentence easy, then listen for the real objection.</div>
+          `)}
+        `;
+
+        button.classList.remove("loading");
+        button.disabled = false;
+
+        routine.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 1200);
+    });
+
+    function mapIndustry(value) {
+      const normalized = value.toLowerCase();
+      if (normalized.includes("insur")) return "insurance";
+      if (normalized.includes("real") || normalized.includes("estate") || normalized.includes("broker")) return "real estate";
+      if (normalized.includes("saas") || normalized.includes("software") || normalized.includes("tech")) return "saas";
+      if (normalized.includes("coach") || normalized.includes("consult")) return "coaching";
+      if (normalized.includes("recruit") || normalized.includes("talent") || normalized.includes("staff")) return "recruiting";
+      return "general";
+    }
+
+    function buildOpening(prospect, industry, offer) {
+      if (prospect === "referral") {
+        return `The reason I reached out is the referral pointed me your way, and I help ${industry} teams with ${offer}. I want to see if there is a real fit before we waste time.`;
+      }
+
+      if (prospect === "warm") {
+        return `Last time there was at least some signal around ${offer}. I want to pressure-test whether this is actually worth attention now or whether we should park it cleanly.`;
+      }
+
+      return `Quick reason for my call: I help ${industry} prospects solve the kind of problem ${offer} is built for without turning it into a bigger project. Is it completely off-base to ask if that is on your radar?`;
+    }
+
+    function step(number, title, tag, body) {
+      return `
+        <article class="step panel">
+          <div class="step-head">
+            <h3>${number}. ${title}</h3>
+            <span class="tag">${tag}</span>
+          </div>
+          ${body}
+        </article>
+      `;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+  </script>
+</body>
+</html>
